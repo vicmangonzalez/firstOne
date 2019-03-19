@@ -1,0 +1,134 @@
+// Create a filter to use only files wich end with .txt
+        FileNameExtensionFilter filtroDeTexto = new FileNameExtensionFilter("Texto","txt");
+        abrirDirectorio.setFileFilter(filtroDeTexto);
+        int status = abrirDirectorio.showOpenDialog(rootPane);
+        if (status == JFileChooser.APPROVE_OPTION) {
+            archivoParaEditar = abrirDirectorio.getSelectedFile();
+            String nombreDelArchivo = abrirDirectorio.getSelectedFile().getName();
+            toLog("Se eligió el archivo: " + nombreDelArchivo);
+
+            try {
+                //Leer archivo de texto y almacenarlo en un buffer
+                Scanner scn = new Scanner(new FileInputStream(archivoParaEditar));
+                String buffer = "";
+                while (scn.hasNext()) {
+                    buffer += scn.nextLine() + "\n";
+                }
+                saveSourceCode.setEnabled(true);
+                //popUpOpcionesGuardarSalir.setEnabled(true);
+                this.setTitle("Compilador - gonznake v1 - " + nombreDelArchivo);
+                toLog("Archivo " + nombreDelArchivo + " cargado exitosamente.");
+                codigoFuente.setVisible(true);
+                codigoFuente.setText(buffer);
+                codigoFuente.requestFocus();
+            } catch (FileNotFoundException ex) {
+                toLog(ex.toString());
+            }
+
+        } else {
+            toLog("No se seleccionó ningún archivo");
+        }
+    }
+    
+    private void guardarDocumento(){
+        if (archivoParaEditar != null) {
+            try {
+                PrintWriter printWriter = new PrintWriter(archivoParaEditar);
+                printWriter.write(codigoFuente.getText());
+                printWriter.close();
+                JOptionPane.showMessageDialog(rootPane, archivoParaEditar.getName()+" guardado exitosamente.", "¡Guardado!", JOptionPane.INFORMATION_MESSAGE);
+                enEdicion = false;
+            } catch (FileNotFoundException ex) {
+                Logger.getLogger(Compilando.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        } 
+        
+         else {
+                JOptionPane.showMessageDialog(rootPane, "Tienes que crear o abrir un documento", "Ha ocurrido un error", JOptionPane.ERROR_MESSAGE);
+            }
+    }
+    
+    private void accionCerrar(){
+        if(enEdicion){
+        int ans = JOptionPane.showConfirmDialog(null, "¿Deseas guardar los cambios?", "Aceptar", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                if (ans == JOptionPane.YES_OPTION) {
+                    guardarDocumento();
+                    this.dispose();
+                }
+                 else{
+                this.dispose();
+               }
+        }
+        else{
+            this.dispose();
+        }
+       
+    }
+    
+    private void accionModificar(){
+        if(enEdicion){
+        int ans = JOptionPane.showConfirmDialog(null, "¿Deseas guardar los cambios?", "Aceptar", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                if (ans == JOptionPane.YES_OPTION) {
+                    guardarDocumento();
+                    enEdicion = false;
+                }
+                else{
+                    enEdicion = false;
+                }
+        }
+    }
+    
+    //Modulos no usados en este proyecto pero pueden llegar a servir
+    private String crearNuevoDocumento(File archivo, String documento){
+       String feed = null;
+        try{
+       salida = new FileOutputStream(archivo);
+       byte[] txt = documento.getBytes();
+       salida.write(txt);
+       feed = "Archivo creado";
+       } 
+       catch (Exception ex) {
+        } 
+        return feed;
+    }
+    private void guardarNuevoDocumento(){
+        if(guardandoArchivo.showDialog(null,"Guardar") == JFileChooser.APPROVE_OPTION){
+           archivoParaEditar = guardandoArchivo.getSelectedFile();
+           String nombreDelArchivo = archivoParaEditar.getName();
+           if(archivoParaEditar.getName().endsWith(".txt")){
+               codigoFuente.setVisible(true);
+               codigoFuente.setText("");
+               String doc = codigoFuente.getText();
+               String msj = crearNuevoDocumento(archivoParaEditar, doc);
+               saveSourceCode.setEnabled(true);
+               //popUpOpcionesGuardarSalir.setEnabled(true);
+               this.setTitle("Texditor - "+nombreDelArchivo);
+               codigoFuente.requestFocus();
+               if(msj!=null){
+               JOptionPane.showMessageDialog(rootPane, msj,"Información",1);
+           }else{
+                   JOptionPane.showMessageDialog(rootPane, "Archivo no compatible","Advertencia",2);
+               }
+           } else{
+               JOptionPane.showMessageDialog(rootPane, "Tienes que agregarle \".txt\" al final del nombre","Información",2);
+               guardarNuevoDocumento();
+           }
+        }
+        else{
+            if (archivoParaEditar == null)
+            {codigoFuente.setVisible(false);
+            saveSourceCode.setEnabled(false);
+            //popUpOpcionesGuardarSalir.setEnabled(false);
+            }
+        }
+    }
+    
+    private void comprobarTablaDeSimbolos() {
+        if(conTablaDeSimbolos){
+            toLog("Compilando...");
+        }
+        
+        else {
+            mostrarAlerta("Aún no tiene diccionario establecido.");
+        }
+    }
